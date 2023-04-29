@@ -1,5 +1,13 @@
 interface Expression {
   evaluate(): number
+  transform(tr: Transformer): Expression
+}
+interface Transformer {
+  //pattern Visitor
+  transformNumber(num: Num): Expression
+  transformBinaryOperation(op: BinaryOperation): Expression
+  transformFunctionCall(func: FunctionCall): Expression
+  transformVariable(variable: Variable): Expression
 }
 class Num implements Expression {
   private value_: number
@@ -11,6 +19,9 @@ class Num implements Expression {
   }
   evaluate(): number {
     return this.value_
+  }
+  transform(tr: Transformer): Expression {
+    return tr.transformNumber(this)
   }
 }
 enum Enum {
@@ -52,6 +63,9 @@ class BinaryOperation implements Expression {
     }
     return 0
   }
+  transform(tr: Transformer): Expression {
+    return tr.transformBinaryOperation(this)
+  }
 }
 class FunctionCall implements Expression {
   private name_: string
@@ -70,6 +84,9 @@ class FunctionCall implements Expression {
     if (this.name_ == 'sqrt') return Math.sqrt(this.arg_.evaluate())
     else return Math.abs(this.arg_.evaluate())
   }
+  transform(tr: Transformer): Expression {
+    return tr.transformFunctionCall(this)
+  }
 }
 class Variable implements Expression {
   private name_: string
@@ -82,16 +99,34 @@ class Variable implements Expression {
   evaluate(): number {
     return 0.0
   }
+  transform(tr: Transformer): Expression {
+    return tr.transformVariable(this)
+  }
 }
-let e1: Expression = new Num(1.234)
-let e2: Expression = new Num(-1.234)
-let e3: Expression = new BinaryOperation(e1, Enum.DIV, e2)
-console.log(e3.evaluate())
-let n32: Expression = new Num(32.0)
-let n16: Expression = new Num(16.0)
-let minus: Expression = new BinaryOperation(n32, Enum.MINUS, n16)
-let callSqrt: Expression = new FunctionCall('sqrt', minus)
-let n2 = new Num(2.0)
-let mult = new BinaryOperation(n2, Enum.MUL, callSqrt)
+class CopySyntaxTree implements Transformer {
+  transformNumber(number: Num): Expression {
+    return new Num(number.value())
+  }
+  transformBinaryOperation(binop: BinaryOperation): Expression {
+    return new BinaryOperation(
+      binop.left().transform(this),
+      binop.operation(),
+      binop.left().transform(this)
+    )
+  }
+  transformFunctionCall(fcall: FunctionCall): Expression {
+    return new FunctionCall(fcall.name(), fcall.arg().transform(this))
+  }
+  transformVariable(variable: Variable): Expression {
+    return new Variable(variable.name())
+  }
+}
+let n32 = new Num(32.0)
+let n16 = new Num(16.0)
+let minus = new BinaryOperation(n32, Enum.MINUS, n16)
+let callSqrts = new FunctionCall('sqrt', minus)
+let variable = new Variable('var')
+let mult = new BinaryOperation(variable, Enum.MUL, callSqrts)
 let callAbs = new FunctionCall('abs', mult)
-console.log(callAbs.evaluate())
+let CST = new CopySyntaxTree()
+let newExpr: Expression = callAbs.transform(CST)
