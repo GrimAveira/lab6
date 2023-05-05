@@ -1,0 +1,12 @@
+tests/package-lock.json
+tests/package.json
+tests/tsconfig.json
+tests/node_modules
+tests/tests/exampleTest.spec.js
+tests/tests/firstTaskTest.spec.js
+tests/tests/secondTaskTest.spec.js
+tests/tests/thirdTaskTest.spec.js
+tests/src/exampleTestModule.js
+tests/src/firstTaskTestModule.js
+tests/src/secondTaskTestModule.js
+tests/src/thirdTaskTestModule.js
