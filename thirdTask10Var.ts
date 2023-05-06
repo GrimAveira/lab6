@@ -1,6 +1,4 @@
 class NodeMyList<T> {
-  public next: NodeMyList<T> | null = null
-  public value: T | null = null
   constructor(value: T) {
     this.value = value
   }
